@@ -4,12 +4,14 @@ class InfoRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color? iconColor;
+
   const InfoRow({
     super.key,
     required this.icon,
     required this.label,
     this.iconColor,
   });
+
   @override
   Widget build(BuildContext context) {
     return Padding(

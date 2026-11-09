@@ -7,6 +7,7 @@ class ProfileInfo extends StatelessWidget {
   final String programStudi;
   final String email;
   final String lokasi;
+
   const ProfileInfo({
     super.key,
     required this.name,
@@ -15,6 +16,7 @@ class ProfileInfo extends StatelessWidget {
     required this.email,
     required this.lokasi,
   });
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -38,9 +40,18 @@ class ProfileInfo extends StatelessWidget {
         const SizedBox(height: 24),
         const Divider(),
         const SizedBox(height: 16),
-        InfoRow(icon: Icons.school, label: programStudi),
-        InfoRow(icon: Icons.email, label: email),
-        InfoRow(icon: Icons.location_on, label: lokasi),
+        InfoRow(
+          icon: Icons.school,
+          label: programStudi,
+        ),
+        InfoRow(
+          icon: Icons.email,
+          label: email,
+        ),
+        InfoRow(
+          icon: Icons.location_on,
+          label: lokasi,
+        ),
       ],
     );
   }
