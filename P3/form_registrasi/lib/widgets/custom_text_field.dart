@@ -9,10 +9,28 @@ class CustomTextField extends StatelessWidget {
   final bool obscureText;
   final TextInputType keyboardType;
   final String? Function(String?)? validator;
+
+  ////////////////////////////////////////////////////////////////////////////////////////
+  final bool readOnly;
+  final VoidCallback? onTap;
+  final ValueChanged<String>? onChanged;
+
+
+  ////////////////////////////////////////////////////////////////////////////////////////
+
   const CustomTextField({
     super.key,
     required this.controller,
     required this.label,
+
+    ///////////////////////////////////////////////////////////////////////////////////
+    this.readOnly = false,
+    this.onTap,
+    this.onChanged,
+
+    /////////////////////////////////////////////////////////////////////////////////////
+
+
     this.hint,
     this.prefixIcon,
     this.obscureText = false,
@@ -24,6 +42,11 @@ class CustomTextField extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextFormField(
+        ///////////////////////////////////////////////////////////////////////////////////
+        readOnly: readOnly,
+        onTap: onTap,
+        onChanged: onChanged,
+        ///////////////////////////////////////////////////////////////////////////////////
         controller: controller,
         decoration: InputDecoration(
           labelText: label,
@@ -36,6 +59,9 @@ class CustomTextField extends StatelessWidget {
         obscureText: obscureText,
         keyboardType: keyboardType,
         validator: validator,
+
+        
+        
       ),
     );
   }
