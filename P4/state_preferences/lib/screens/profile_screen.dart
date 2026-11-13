@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
@@ -16,10 +18,86 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _controllersInitialized = false;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void dispose() {
+    if (_controllersInitialized) {
+      _nameController.dispose();
+      _emailController.dispose();
+    }
 
-    final provider = UserProvider.of(context);
+    super.dispose();
+  }
+
+  Future<void> _saveProfile() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final provider = context.read<UserProvider>();
+    final email = _emailController.text.trim();
+
+    // Memeriksa email yang sudah digunakan
+    final isTaken = await provider.isEmailTaken(email);
+
+    if (!mounted) return;
+
+    if (isTaken) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Email sudah digunakan'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final updatedUser = provider.user.copyWith(
+      name: _nameController.text.trim(),
+      email: email,
+      isLoggedIn: true,
+    );
+
+    await provider.updateUser(updatedUser);
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Profil berhasil disimpan'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void _logout() {
+    final provider = context.read<UserProvider>();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Apakah Anda yakin ingin logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              provider.logout();
+              Navigator.pop(context);
+            },
+            child: const Text(
+              'Logout',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<UserProvider>();
 
     if (!provider.isLoading && !_controllersInitialized) {
       _nameController = TextEditingController(
@@ -32,63 +110,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       _controllersInitialized = true;
     }
-  }
 
-  @override
-  void dispose() {
-    if (_controllersInitialized) {
-      _nameController.dispose();
-      _emailController.dispose();
-    }
-
-    super.dispose();
-  }
-
-  void _saveProfile() {
-    if (_formKey.currentState!.validate()) {
-      final provider = UserProvider.of(context);
-      final updatedUser = provider.user.copyWith(
-        name: _nameController.text.trim(),
-        email: _emailController.text.trim(),
-        isLoggedIn: true,
-      );
-      provider.updateUser(updatedUser);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profil berhasil disimpan'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    }
-  }
-
-  void _logout() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Apakah Anda yakin ingin logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              UserProvider.of(context).logout();
-              Navigator.pop(context);
-            },
-            child: const Text('Logout', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final provider = UserProvider.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profil'),
@@ -136,6 +158,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             return 'Nama tidak boleh kosong';
                           }
 
+                          if (RegExp(r'[<>]').hasMatch(value)) {
+                            return 'Nama mengandung karakter tidak diizinkan';
+                          }
+
                           return null;
                         },
                       ),
@@ -153,7 +179,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             return 'Email tidak boleh kosong';
                           }
 
-                          final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+                          final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+
                           if (!emailRegex.hasMatch(value.trim())) {
                             return 'Format email tidak valid';
                           }
@@ -169,7 +196,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.deepPurple,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -182,7 +211,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               Row(
                                 children: [
-                                  Icon(Icons.info, color: Colors.amber[800]),
+                                  Icon(
+                                    Icons.info,
+                                    color: Colors.amber[800],
+                                  ),
                                   const SizedBox(width: 8),
                                   const Text(
                                     'Catatan Keamanan',
